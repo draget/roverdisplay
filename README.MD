@@ -19,6 +19,16 @@ rover
 ```
 mkdir rover && cd rover
 git clone https://github.com/draget/roverdisplay
+git clone https://github.com/colinbourassa/libcomm14cux
+```
+```
+cd libcomm14cux
+mkdir build && cd build
+cmake ..
+make
+cd ..
+```
+```
 cd roverdisplay
 mkdir build && cd build
 cmake ..
