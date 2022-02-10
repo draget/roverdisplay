@@ -34,3 +34,9 @@ mkdir build && cd build
 cmake ..
 make
 ```
+
+## Cross-compiling
+
+```
+cmake -DCMAKE_TOOLCHAIN_FILE=TC-arm.cmake ..
+```
