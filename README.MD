@@ -2,7 +2,7 @@
 
 ## Setup
 
-This project depends upon [https://github.com/colinbourassa/libcomm14cux](libcomm14cux).
+This project depends upon [libcomm14cux](https://github.com/colinbourassa/libcomm14cux).
 
 ```
 rover
