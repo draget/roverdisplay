@@ -26,14 +26,18 @@
 
 #include "cuxinterface.h"
 
+#define STR_INDIR(x) #x
+#define STR(x) STR_INDIR(x)
+
 #define COL1	0
 #define COL1_D	25
-#define COL1_U	30
+#define COL1_U	31
 #define	COL2	40
 #define COL2_D	65
-#define COL2_U	70
+#define COL2_U	71
 #define ROWS	15
 #define COLS	80
+#define FLEN	6
 
 #define REFRESH	200
 
@@ -42,7 +46,9 @@ void alarm_handler(int signum);
 void io_handler(int signum);
 void do_layout();
 void update_data();
+void process_key();
 void setup_aio_buffer(struct aiocb *aio_buf);
+
 
 ecu_data dat;
 bool metric;
@@ -71,6 +77,12 @@ int main(int argc, char** argv) {
 
 	if(sigaction(SIGALRM, &handler, NULL) == -1) {
 		perror("Couldn't install update handler");
+	}
+
+	handler.sa_handler = io_handler;
+
+	if(sigaction(SIGIO, &handler, NULL) == -1) {
+        	perror("Couldn't install AIO handler");
 	}
 
 	if(argc != 2) {
@@ -113,7 +125,7 @@ int main(int argc, char** argv) {
 			alarm_flag = 0;
 		}
 		else if(io_flag) {
-			
+			process_key();
 			io_flag = 0;
 		}
 		else {
@@ -150,17 +162,25 @@ void do_layout() {
 
 	mvprintw(1, 70, "MIL");
 	mvprintw(2, COL1, "Engine speed:");
+        mvprintw(2, COL1_U, "rpm");
 	mvprintw(2, COL2, "Engine temperature:");
+	mvprintw(2, COL2_U, metric ? "degC" : "degF");
 	mvprintw(3, COL1, "Road speed:");
+	mvprintw(3, COL1_U, metric ? "km/h" : "mph ");
 	mvprintw(3, COL2, "Fuel temperature:");
+        mvprintw(3, COL2_U, metric ? "degC" : "degF");
 	mvprintw(4, COL1, "MAF:");
+        mvprintw(4, COL1_U, "%");
 	mvprintw(5, COL1, "Throttle:");
+        mvprintw(5, COL1_U, "%");
 	mvprintw(6, COL1, "Idle bypass:");
+        mvprintw(6, COL1_U, "%");
 	mvprintw(7, COL1, "Lambda trim (odd):");
 	mvprintw(7, COL2, "Lamba trim (even):");
 	mvprintw(8, COL1, "Injector duty cycle:");
 	mvprintw(9, COL1, "Pulse width:");
 	mvprintw(13, COL1, "Main voltage:");
+        mvprintw(13, COL1_U, "V");
 
 	mvprintw(ROWS - 1, COLS - 1, " ");
 
@@ -207,14 +227,15 @@ void update_data() {
 
 	attroff(A_REVERSE);
 
-	mvprintw(2, COL1_D, "%u", dat.m_engineSpeedRPM);
-	mvprintw(2, COL2_D, "%d", convertTemperature(dat.m_coolantTempF, Celsius*metric));
+	mvprintw(2, COL1_D, "%-" STR(FLEN) "u", dat.m_engineSpeedRPM);
+	mvprintw(2, COL2_D, "%-" STR(FLEN) "d", convertTemperature(dat.m_coolantTempF, Celsius*metric));
 
 	refresh();
 
 	return;
 
 }
+
 void setup_aio_buffer(struct aiocb *aio_buf) {
 	static char input[1];
 
@@ -228,3 +249,28 @@ void setup_aio_buffer(struct aiocb *aio_buf) {
 
 	return;
 }
+
+void process_key() {
+
+	char *cp = (char *) kbcbuf.aio_buf;
+
+	if(aio_error(&kbcbuf) != 0) {
+		perror("AIO read failed.");
+	}
+	else {
+		switch(*cp) {
+			case 'U':
+			case 'u':
+				metric = !metric;
+				do_layout();
+				break;
+		}
+
+	}
+
+	aio_read(&kbcbuf);
+
+	return;
+
+}
+
