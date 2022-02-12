@@ -10,7 +10,9 @@ rover
 |    |--- src
 |    |--- build
 |--- roverdisplay
+     |--- src
      |--- build
+          |--- bin
 ```
 
 
@@ -26,13 +28,14 @@ cd libcomm14cux
 mkdir build && cd build
 cmake ..
 make
-cd ..
+cd ../..
 ```
 ```
 cd roverdisplay
 mkdir build && cd build
 cmake ..
 make
+cd bin
 ```
 
 ## Cross-compiling
