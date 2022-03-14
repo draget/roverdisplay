@@ -158,29 +158,62 @@ void exit_handler(int signum) {
 
 void do_layout() {
 
-	mvprintw(0, COL2 - 6, "RoverDisplay");
+	int row = 0;
 
-	mvprintw(1, 70, "MIL");
-	mvprintw(2, COL1, "Engine speed:");
-        mvprintw(2, COL1_U, "rpm");
-	mvprintw(2, COL2, "Engine temperature:");
-	mvprintw(2, COL2_U, metric ? "degC" : "degF");
-	mvprintw(3, COL1, "Road speed:");
-	mvprintw(3, COL1_U, metric ? "km/h" : "mph ");
-	mvprintw(3, COL2, "Fuel temperature:");
-        mvprintw(3, COL2_U, metric ? "degC" : "degF");
-	mvprintw(4, COL1, "MAF:");
-        mvprintw(4, COL1_U, "%");
-	mvprintw(5, COL1, "Throttle:");
-        mvprintw(5, COL1_U, "%");
-	mvprintw(6, COL1, "Idle bypass:");
-        mvprintw(6, COL1_U, "%");
-	mvprintw(7, COL1, "Lambda trim (odd):");
-	mvprintw(7, COL2, "Lamba trim (even):");
-	mvprintw(8, COL1, "Injector duty cycle:");
-	mvprintw(9, COL1, "Pulse width:");
-	mvprintw(13, COL1, "Main voltage:");
-        mvprintw(13, COL1_U, "V");
+	mvprintw(row, COL2 - 6, "RoverDisplay");
+	row++;
+	mvprintw(row, COL1, "MIL:");
+	row++;
+	mvprintw(row, COL1, "Engine speed:");
+	mvprintw(row, COL1_U, "rpm");
+	mvprintw(row, COL2, "Engine temperature:");
+	mvprintw(row, COL2_U, metric ? "degC" : "degF");
+	row++;
+	mvprintw(row, COL1, "Road speed:");
+	mvprintw(row, COL1_U, metric ? "km/h" : "mph ");
+	mvprintw(row, COL2, "Fuel temperature:");
+	mvprintw(row, COL2_U, metric ? "degC" : "degF");
+	row++;
+	row++;
+	mvprintw(row, COL1, "MAF:");
+	mvprintw(row, COL1_U, "%%");
+	row++;
+	mvprintw(row, COL1, "Throttle:");
+	mvprintw(row, COL1_U, "%%");
+	mvprintw(row, COL2, "Rev limit:");
+	mvprintw(row, COL2_U, "rpm");
+	row++;
+	mvprintw(row, COL1, "Idle bypass:");
+	mvprintw(row, COL1_U, "%%");
+	mvprintw(row, COL2, "Idle target:");
+	mvprintw(row, COL2_U, "rpm");
+	row++;
+	row++;
+	mvprintw(row, COL1, "Lambda trim (odd):");
+	mvprintw(row, COL1_U, "%%");
+	mvprintw(row, COL2, "Lamba trim (even):");
+	mvprintw(row, COL2_U, "%%");
+	row++;
+	mvprintw(row, COL1, "Injector duty cycle:");
+	mvprintw(row, COL1_U, "%%");
+	mvprintw(row, COL2, "Pulse width:");
+	mvprintw(row, COL2_U, "ms");
+	row++;
+	row++;
+	mvprintw(row, COL1, "Main voltage:");
+	mvprintw(row, COL1_U, "V");
+	mvprintw(row, COL2, "Fuel pump relay:");
+
+	attron(A_REVERSE);
+	mvprintw(ROWS - 1, COL1, "U");
+	mvprintw(ROWS - 1, COL1 + 7, "C");
+	mvprintw(ROWS - 1, COL1 + 14, "F");
+	mvprintw(ROWS - 1, COL1 + 20, "L");
+	attroff(A_REVERSE);
+	mvprintw(ROWS - 1, COL1 + 1, "nits");
+	mvprintw(ROWS - 1, COL1 + 8, "odes");
+	mvprintw(ROWS - 1, COL1 + 15, "uel");
+	mvprintw(ROWS - 1, COL1 + 21, "og");
 
 	mvprintw(ROWS - 1, COLS - 1, " ");
 
@@ -202,6 +235,7 @@ void io_handler(int signum) {
 
 void update_data() {
 
+	int row;
 	read_result result;
 
 	if(run == 1) {
@@ -222,13 +256,28 @@ void update_data() {
 		mvprintw(ROWS - 1, COL2, "Read Err");
 	}
 	else {
-		mvprintw(ROWS - 1, COL2, "Read Ok");
+		mvprintw(ROWS - 1, COL2, "Read Ok ");
 	}
 
 	attroff(A_REVERSE);
 
-	mvprintw(2, COL1_D, "%-" STR(FLEN) "u", dat.m_engineSpeedRPM);
-	mvprintw(2, COL2_D, "%-" STR(FLEN) "d", convertTemperature(dat.m_coolantTempF, Celsius*metric));
+	row = 2;
+	mvprintw(row, COL1_D, "%-" STR(FLEN) "u", dat.m_engineSpeedRPM);
+	mvprintw(row, COL2_D, "%-" STR(FLEN) "d", convertTemperature(dat.m_coolantTempF, Celsius*metric));
+	row++;
+	mvprintw(row, COL1_D, "%-" STR(FLEN) "u", convertSpeed(dat.m_roadSpeedMPH, KPH*metric));
+	mvprintw(row, COL2_D, "%-" STR(FLEN) "d", convertTemperature(dat.m_fuelTempF, Celsius*metric));
+	row++;
+	row++;
+	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_mafReading);
+	row++;
+	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_throttlePos);
+	mvprintw(row, COL2_D, "%-" STR(FLEN) "u", dat.m_rpmLimit);
+	row++;
+	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_idleBypassPos);
+	mvprintw(row, COL2_D, "%-" STR(FLEN) "u", dat.m_targetIdleSpeed);
+	row++;
+	row++;
 
 	refresh();
 
