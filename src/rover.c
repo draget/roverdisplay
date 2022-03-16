@@ -49,9 +49,10 @@ void update_data();
 void process_key();
 void setup_aio_buffer(struct aiocb *aio_buf);
 
-
 ecu_data dat;
 bool metric;
+WINDOW *mainw;
+WINDOW *popup;
 
 volatile sig_atomic_t run;
 volatile sig_atomic_t alarm_flag;
@@ -60,7 +61,6 @@ volatile sig_atomic_t io_flag;
 struct aiocb kbcbuf;
 
 int main(int argc, char** argv) {
-
 	struct sigaction handler;
 	sigset_t blocked;
 	struct itimerval itimer;
@@ -115,6 +115,8 @@ int main(int argc, char** argv) {
 	clear();
 	curs_set(0);
 
+	mainw = newwin(ROWS, COLS, 0, 0);
+
 	do_layout();
 
 	setitimer(ITIMER_REAL, &itimer, NULL);
@@ -139,11 +141,9 @@ int main(int argc, char** argv) {
 	printf("RoverDisplay - goodbye.\n");
 
 	return 0;
-
 }
 
 void exit_handler(int signum) {
-
 	struct sigaction cancel_sigalrm;
 	cancel_sigalrm.sa_handler = SIG_IGN;
 	cancel_sigalrm.sa_flags = 0;
@@ -157,7 +157,6 @@ void exit_handler(int signum) {
 }
 
 void do_layout() {
-
 	int row = 0;
 
 	mvprintw(row, COL2 - 6, "RoverDisplay");
@@ -209,16 +208,30 @@ void do_layout() {
 	mvprintw(ROWS - 1, COL1 + 7, "C");
 	mvprintw(ROWS - 1, COL1 + 14, "F");
 	mvprintw(ROWS - 1, COL1 + 20, "L");
+	mvprintw(ROWS - 1, COL1 + 25, "I");
 	attroff(A_REVERSE);
 	mvprintw(ROWS - 1, COL1 + 1, "nits");
 	mvprintw(ROWS - 1, COL1 + 8, "odes");
 	mvprintw(ROWS - 1, COL1 + 15, "uel");
 	mvprintw(ROWS - 1, COL1 + 21, "og");
+	mvprintw(ROWS - 1, COL1 + 26, "nfo");
 
 	mvprintw(ROWS - 1, COLS - 1, " ");
 
 	refresh();
 
+	return;
+}
+
+void codes_window() {
+
+	popup = newwin(ROWS - 1, COLS, 1, 0);
+	refresh();
+
+	box(popup, 0, 0);
+	
+	wrefresh(popup);
+	
 	return;
 
 }
@@ -234,7 +247,6 @@ void io_handler(int signum) {
 }
 
 void update_data() {
-
 	int row;
 	read_result result;
 
@@ -261,28 +273,44 @@ void update_data() {
 
 	attroff(A_REVERSE);
 
-	row = 2;
-	mvprintw(row, COL1_D, "%-" STR(FLEN) "u", dat.m_engineSpeedRPM);
-	mvprintw(row, COL2_D, "%-" STR(FLEN) "d", convertTemperature(dat.m_coolantTempF, Celsius*metric));
+	row = 1;
+	if(dat.m_milOn) attron(A_REVERSE);
+	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) "s", dat.m_milOn ? "On" : "Off" );
+	attroff(A_REVERSE);
 	row++;
-	mvprintw(row, COL1_D, "%-" STR(FLEN) "u", convertSpeed(dat.m_roadSpeedMPH, KPH*metric));
-	mvprintw(row, COL2_D, "%-" STR(FLEN) "d", convertTemperature(dat.m_fuelTempF, Celsius*metric));
+	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) "u", dat.m_engineSpeedRPM);
+	mvwprintw(mainw, row, COL2_D, "%-" STR(FLEN) "d", convertTemperature(dat.m_coolantTempF, Celsius*metric));
 	row++;
-	row++;
-	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_mafReading);
-	row++;
-	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_throttlePos);
-	mvprintw(row, COL2_D, "%-" STR(FLEN) "u", dat.m_rpmLimit);
-	row++;
-	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_idleBypassPos);
-	mvprintw(row, COL2_D, "%-" STR(FLEN) "u", dat.m_targetIdleSpeed);
+	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) "u", convertSpeed(dat.m_roadSpeedMPH, KPH*metric));
+	mvwprintw(mainw, row, COL2_D, "%-" STR(FLEN) "d", convertTemperature(dat.m_fuelTempF, Celsius*metric));
 	row++;
 	row++;
+	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_mafReading);
+	row++;
+	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_throttlePos);
+	mvwprintw(mainw, row, COL2_D, "%-" STR(FLEN) "u", dat.m_rpmLimit);
+	row++;
+	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_idleBypassPos);
+	if(dat.m_idleMode) attron(A_REVERSE);
+	mvwprintw(mainw, row, COL2_D, "%-" STR(FLEN) "u", dat.m_targetIdleSpeed);
+	attroff(A_REVERSE);
+	row++;
+	row++;
+	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) "d", dat.m_lambdaTrimOdd);
+	mvwprintw(mainw, row, COL2_D, "%-" STR(FLEN) "d", dat.m_lambdaTrimEven);
+	row++;
+	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) ".1f", (dat.m_injectorPulseWidthMs / (60.0 / (float)dat.m_engineSpeedRPM * 1000.0)) * 100);
+	mvwprintw(mainw, row, COL2_D, "%-" STR(FLEN) ".2f", dat.m_injectorPulseWidthMs);
+	row++;
+	row++;
+	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) ".2f", dat.m_mainVoltage);	
+	if(dat.m_fuelPumpRelayOn) attron(A_REVERSE);
+	mvwprintw(mainw, row, COL2_D, "%-" STR(FLEN) "s", dat.m_fuelPumpRelayOn ? "On" : "Off" );
+	attroff(A_REVERSE);
 
-	refresh();
+	wrefresh(mainw);
 
 	return;
-
 }
 
 void setup_aio_buffer(struct aiocb *aio_buf) {
@@ -300,7 +328,6 @@ void setup_aio_buffer(struct aiocb *aio_buf) {
 }
 
 void process_key() {
-
 	char *cp = (char *) kbcbuf.aio_buf;
 
 	if(aio_error(&kbcbuf) != 0) {
@@ -313,13 +340,20 @@ void process_key() {
 				metric = !metric;
 				do_layout();
 				break;
+			case 'C':
+			case 'c':
+				codes_window();
+				break;
+			case 27:
+				delwin(popup);
+				touchwin(mainw);
+				refresh();
+				break;
 		}
-
 	}
 
 	aio_read(&kbcbuf);
 
 	return;
-
 }
 
