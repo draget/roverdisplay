@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <curses.h>
+#include <panel.h>
 #include <signal.h>
 #include <unistd.h>
 #include <sys/time.h>
@@ -51,8 +52,9 @@ void setup_aio_buffer(struct aiocb *aio_buf);
 
 ecu_data dat;
 bool metric;
-WINDOW *mainw;
-WINDOW *popup;
+PANEL *mainp;
+PANEL *popupp;
+WINDOW *popupw;
 
 volatile sig_atomic_t run;
 volatile sig_atomic_t alarm_flag;
@@ -115,7 +117,7 @@ int main(int argc, char** argv) {
 	clear();
 	curs_set(0);
 
-	mainw = newwin(ROWS, COLS, 0, 0);
+	mainp = new_panel(stdscr);
 
 	do_layout();
 
@@ -218,19 +220,21 @@ void do_layout() {
 
 	mvprintw(ROWS - 1, COLS - 1, " ");
 
-	refresh();
+	update_panels();	
+	doupdate();
 
 	return;
 }
 
 void codes_window() {
 
-	popup = newwin(ROWS - 1, COLS, 1, 0);
-	refresh();
+	popupw = newwin(ROWS - 1, COLS, 1, 0);
+	popupp = new_panel(popupw);
 
-	box(popup, 0, 0);
-	
-	wrefresh(popup);
+	box(popupw, 0, 0);
+
+	update_panels();	
+	doupdate();
 	
 	return;
 
@@ -275,40 +279,41 @@ void update_data() {
 
 	row = 1;
 	if(dat.m_milOn) attron(A_REVERSE);
-	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) "s", dat.m_milOn ? "On" : "Off" );
+	mvprintw(row, COL1_D, "%-" STR(FLEN) "s", dat.m_milOn ? "On" : "Off" );
 	attroff(A_REVERSE);
 	row++;
-	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) "u", dat.m_engineSpeedRPM);
-	mvwprintw(mainw, row, COL2_D, "%-" STR(FLEN) "d", convertTemperature(dat.m_coolantTempF, Celsius*metric));
+	mvprintw(row, COL1_D, "%-" STR(FLEN) "u", dat.m_engineSpeedRPM);
+	mvprintw(row, COL2_D, "%-" STR(FLEN) "d", convertTemperature(dat.m_coolantTempF, Celsius*metric));
 	row++;
-	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) "u", convertSpeed(dat.m_roadSpeedMPH, KPH*metric));
-	mvwprintw(mainw, row, COL2_D, "%-" STR(FLEN) "d", convertTemperature(dat.m_fuelTempF, Celsius*metric));
+	mvprintw(row, COL1_D, "%-" STR(FLEN) "u", convertSpeed(dat.m_roadSpeedMPH, KPH*metric));
+	mvprintw(row, COL2_D, "%-" STR(FLEN) "d", convertTemperature(dat.m_fuelTempF, Celsius*metric));
 	row++;
 	row++;
-	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_mafReading);
+	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_mafReading);
 	row++;
-	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_throttlePos);
-	mvwprintw(mainw, row, COL2_D, "%-" STR(FLEN) "u", dat.m_rpmLimit);
+	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_throttlePos);
+	mvprintw(row, COL2_D, "%-" STR(FLEN) "u", dat.m_rpmLimit);
 	row++;
-	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_idleBypassPos);
+	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_idleBypassPos);
 	if(dat.m_idleMode) attron(A_REVERSE);
-	mvwprintw(mainw, row, COL2_D, "%-" STR(FLEN) "u", dat.m_targetIdleSpeed);
+	mvprintw(row, COL2_D, "%-" STR(FLEN) "u", dat.m_targetIdleSpeed);
 	attroff(A_REVERSE);
 	row++;
 	row++;
-	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) "d", dat.m_lambdaTrimOdd);
-	mvwprintw(mainw, row, COL2_D, "%-" STR(FLEN) "d", dat.m_lambdaTrimEven);
+	mvprintw(row, COL1_D, "%-" STR(FLEN) "d", dat.m_lambdaTrimOdd);
+	mvprintw(row, COL2_D, "%-" STR(FLEN) "d", dat.m_lambdaTrimEven);
 	row++;
-	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) ".1f", (dat.m_injectorPulseWidthMs / (60.0 / (float)dat.m_engineSpeedRPM * 1000.0)) * 100);
-	mvwprintw(mainw, row, COL2_D, "%-" STR(FLEN) ".2f", dat.m_injectorPulseWidthMs);
+	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", (dat.m_injectorPulseWidthMs / (60.0 / (float)dat.m_engineSpeedRPM * 1000.0)) * 100);
+	mvprintw(row, COL2_D, "%-" STR(FLEN) ".2f", dat.m_injectorPulseWidthMs);
 	row++;
 	row++;
-	mvwprintw(mainw, row, COL1_D, "%-" STR(FLEN) ".2f", dat.m_mainVoltage);	
+	mvprintw(row, COL1_D, "%-" STR(FLEN) ".2f", dat.m_mainVoltage);	
 	if(dat.m_fuelPumpRelayOn) attron(A_REVERSE);
-	mvwprintw(mainw, row, COL2_D, "%-" STR(FLEN) "s", dat.m_fuelPumpRelayOn ? "On" : "Off" );
+	mvprintw(row, COL2_D, "%-" STR(FLEN) "s", dat.m_fuelPumpRelayOn ? "On" : "Off" );
 	attroff(A_REVERSE);
 
-	wrefresh(mainw);
+	update_panels();
+	doupdate();
 
 	return;
 }
@@ -345,9 +350,16 @@ void process_key() {
 				codes_window();
 				break;
 			case 27:
-				delwin(popup);
-				touchwin(mainw);
-				refresh();
+				if(popupp) {
+					del_panel(popupp);
+					popupp = NULL;
+				}
+				if(popupw) {
+					delwin(popupw);
+					popupw = NULL;
+				}
+				update_panels();
+				doupdate();
 				break;
 		}
 	}
