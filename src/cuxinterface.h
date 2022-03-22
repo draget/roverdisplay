@@ -52,10 +52,13 @@ typedef struct ecu_data {
 	uint16_t m_ident;
 	uint8_t m_rowScaler[FUEL_MAP_COUNT];
 	uint16_t m_mafScaler;
+	c14cux_faultcodes m_faultCodes;
 	} ecu_data;
 
 extern bool connect_to_ecu(ecu_data* dat, const char* dev);
+extern void disconnect_from_ecu();
 extern read_result read_data(ecu_data* dat);
+extern read_result read_fault_codes(ecu_data* dat);
 extern unsigned int convertSpeed(unsigned int speedMph, int speedUnits);
 extern int convertTemperature(int tempF, int tempUnits);
 

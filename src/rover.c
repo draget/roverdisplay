@@ -118,6 +118,9 @@ int main(int argc, char** argv) {
 	curs_set(0);
 
 	mainp = new_panel(stdscr);
+	popupw = newwin(ROWS - 1, COLS, 1, 0);
+	popupp = new_panel(popupw);
+	hide_panel(popupp);
 
 	do_layout();
 
@@ -228,11 +231,15 @@ void do_layout() {
 
 void codes_window() {
 
-	popupw = newwin(ROWS - 1, COLS, 1, 0);
-	popupp = new_panel(popupw);
-
+	wclear(popupw);
 	box(popupw, 0, 0);
+	wattron(popupw, A_REVERSE);
+	mvwprintw(popupw, ROWS - 2, 0, "Esc");
+	wattroff(popupw, A_REVERSE);
 
+	mvwprintw(popupw, 1, 1, "* ");
+
+	show_panel(popupp);
 	update_panels();	
 	doupdate();
 	
@@ -350,14 +357,7 @@ void process_key() {
 				codes_window();
 				break;
 			case 27:
-				if(popupp) {
-					del_panel(popupp);
-					popupp = NULL;
-				}
-				if(popupw) {
-					delwin(popupw);
-					popupw = NULL;
-				}
+				hide_panel(popupp);
 				update_panels();
 				doupdate();
 				break;

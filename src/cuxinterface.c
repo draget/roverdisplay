@@ -1,3 +1,4 @@
+#include <string.h>
 #include <sys/time.h>
 #include "cuxinterface.h"
 
@@ -43,6 +44,9 @@ bool connect_to_ecu(ecu_data* dat, const char* dev) {
 	dat->m_rowScaler[FUEL_MAP_COUNT] = 0;
 	dat->m_mafScaler = 0;
 
+    memset(&dat->m_faultCodes, 0, sizeof(dat->m_faultCodes));
+
+
 	readIntervals[SampleType_EngineTemperature]  = 1499;
 	readIntervals[SampleType_RoadSpeed]          = 997;
 	readIntervals[SampleType_EngineRPM]          = 0;
@@ -74,16 +78,43 @@ bool connect_to_ecu(ecu_data* dat, const char* dev) {
 
 }
 
+void disconnect_from_ecu() {
+
+	bool connected = c14cux_isConnected(&cuxinfo);
+
+	if(connected) {
+		c14cux_disconnect(&cuxinfo);
+	}
+
+}
+
+read_result read_fault_codes(ecu_data* dat) {
+
+	if(c14cux_isConnected(&cuxinfo)) {
+
+		memset(&dat->m_faultCodes, 0, sizeof(dat->m_faultCodes));
+
+		if(c14cux_getFaultCodes(&cuxinfo, &dat->m_faultCodes)) {
+			return readresult_success;
+		}
+		else {
+			return readresult_failure;
+		}
+
+	}
+
+	return readresult_nostatement;
+
+}
+
 
 read_result merge_result(read_result total, bool single) {
 	read_result result = total;
 
-	if (total == readresult_nostatement)
-	{
+	if(total == readresult_nostatement) {
 		result = single ? readresult_success : readresult_failure;
 	}
-	else if ((total == readresult_failure) && single)
-	{
+	else if((total == readresult_failure) && single) {
 		result = readresult_success;
 	}
 
@@ -103,12 +134,10 @@ uint64_t ms_since_epoch() {
 bool is_due_for_measurement(SampleType type) {
 	bool status = false;
 
-	if (is_sample_appropriate_for_mode(type))
-	{
+	if(is_sample_appropriate_for_mode(type)) {
 		uint64_t now = ms_since_epoch();
 
-		if (now - lastReadTime[type] >= readIntervals[type])
-		{
+		if(now - lastReadTime[type] >= readIntervals[type]) {
 			status = true;
 			lastReadTime[type] = now;
 		}
@@ -305,6 +334,7 @@ read_result read_data(ecu_data* dat) {
 
 	return result;
 }
+
 
 
 unsigned int convertSpeed(unsigned int speedMph, int speedUnits) {
