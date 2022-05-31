@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 2.8)
 project(roverdisplay C)
 
 set(SOURCE_SUBDIR "${CMAKE_SOURCE_DIR}/src")
-set(CMAKE_BUILD_RPATH ".")
 
 add_compile_options(-Wall)
 
@@ -13,6 +12,8 @@ find_library(LIBCOMM14CUX_LIBRARY comm14cux PATHS
 ${CMAKE_SOURCE_DIR}/../libcomm14cux/, ${CMAKE_SOURCE_DIR}/../libcomm14cux/build NO_CMAKE_FIND_ROOT_PATH)
 
 include_directories(${CMAKE_SOURCE_DIR}/../libcomm14cux/src)
+
+set(CMAKE_BUILD_RPATH ".")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 

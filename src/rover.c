@@ -47,6 +47,7 @@ void alarm_handler(int signum);
 void io_handler(int signum);
 void do_layout();
 void update_data();
+void write_faults();
 void process_key();
 void setup_aio_buffer(struct aiocb *aio_buf);
 
@@ -230,6 +231,7 @@ void do_layout() {
 }
 
 void codes_window() {
+	read_result result;
 
 	wclear(popupw);
 	box(popupw, 0, 0);
@@ -238,6 +240,14 @@ void codes_window() {
 	wattroff(popupw, A_REVERSE);
 
 	mvwprintw(popupw, 1, 1, "* ");
+
+	result = read_fault_codes(&dat);
+	if(result == readresult_failure) {
+		wprintw(popupw, "Read Err");
+	}
+	else {
+		write_faults();
+	}
 
 	show_panel(popupp);
 	update_panels();	
@@ -324,6 +334,38 @@ void update_data() {
 
 	return;
 }
+
+void write_faults() {
+	int i = 1;
+
+	if(dat.m_faultCodes.ROM_Checksum_Failure) mvwprintw(popupw, i++, 1, "* (29) ECU checksum error");
+	if(dat.m_faultCodes.Lambda_Sensor_Odd) mvwprintw(popupw, i++, 1, "* (44) Lambda sensor (odd)");
+	if(dat.m_faultCodes.Lambda_Sensor_Even) mvwprintw(popupw, i++, 1, "* (45) Lambda sensor (even)");
+	if(dat.m_faultCodes.Misfire_Odd_Bank) mvwprintw(popupw, i++, 1, "* (40) Misfire (odd)");
+	if(dat.m_faultCodes.Misfire_Even_Bank) mvwprintw(popupw, i++, 1, "* (50) Misfire (even)");
+	if(dat.m_faultCodes.Airflow_Meter) mvwprintw(popupw, i++, 1, "* (12) Airflow meter");
+	if(dat.m_faultCodes.Tune_Resistor_Out_of_Range) mvwprintw(popupw, i++, 1, "* (21) Tune resistor out of range");
+	if(dat.m_faultCodes.Injector_Odd_Bank) mvwprintw(popupw, i++, 1, "* (34) Injector bank (odd)");
+	if(dat.m_faultCodes.Injector_Even_Bank) mvwprintw(popupw, i++, 1, "* (36) Injector bank (even)");
+	if(dat.m_faultCodes.Coolant_Temp_Sensor) mvwprintw(popupw, i++, 1, "* (14) Coolant temp sensor");
+	if(dat.m_faultCodes.Throttle_Pot) mvwprintw(popupw, i++, 1, "* (17) Throttle pot");
+	if(dat.m_faultCodes.Throttle_Pot_Hi_MAF_Lo) mvwprintw(popupw, i++, 1, "* (18) Throttle pot hi / MAF lo");
+	if(dat.m_faultCodes.Throttle_Pot_Lo_MAF_Hi) mvwprintw(popupw, i++, 1, "* (19) Throttle pot lo / MAF hi");
+	if(dat.m_faultCodes.Purge_Valve_Leak) mvwprintw(popupw, i++, 1, "* (88) Purge valve leak");
+	if(dat.m_faultCodes.Mixture_Too_Lean) mvwprintw(popupw, i++, 1, "* (26) Mixture too lean");
+	if(dat.m_faultCodes.Intake_Air_Leak) mvwprintw(popupw, i++, 1, "* (28) Intake air leak");
+	if(dat.m_faultCodes.Low_Fuel_Pressure) mvwprintw(popupw, i++, 1, "* (23) Low fuel pressure");
+	if(dat.m_faultCodes.Idle_Valve_Stepper_Motor) mvwprintw(popupw, i++, 1, "* (48) Idle Air Control stepper motor");
+	if(dat.m_faultCodes.Road_Speed_Sensor) mvwprintw(popupw, i++, 1, "* (68) Road speed sensor");
+	if(dat.m_faultCodes.Neutral_Switch) mvwprintw(popupw, i++, 1, "* (69) Neutral (gear selector) switch");
+	if(dat.m_faultCodes.Low_Fuel_Pressure_or_Air_Leak) mvwprintw(popupw, i++, 1, "* (58) Ambiguous: low fuel pressure or air leak");
+	if(dat.m_faultCodes.Fuel_Temp_Sensor) mvwprintw(popupw, i++, 1, "* (15) Fuel temp sensor");
+	if(dat.m_faultCodes.Battery_Disconnected) mvwprintw(popupw, i++, 1, "* (02) RAM contents unreliable (battery disconnected)");
+	if(dat.m_faultCodes.RAM_Checksum_Failure) mvwprintw(popupw, i++, 1, "* (03) Bad checksum on battery-backed RAM");
+
+	return;
+}
+
 
 void setup_aio_buffer(struct aiocb *aio_buf) {
 	static char input[1];
