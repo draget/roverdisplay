@@ -306,12 +306,12 @@ void update_data() {
 	mvprintw(row, COL2_D, "%-" STR(FLEN) "d", convertTemperature(dat.m_fuelTempF, Celsius*metric));
 	row++;
 	row++;
-	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_mafReading);
+	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_mafReading*100);
 	row++;
-	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_throttlePos);
+	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_throttlePos*100);
 	mvprintw(row, COL2_D, "%-" STR(FLEN) "u", dat.m_rpmLimit);
 	row++;
-	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_idleBypassPos);
+	mvprintw(row, COL1_D, "%-" STR(FLEN) ".1f", dat.m_idleBypassPos*100);
 	if(dat.m_idleMode) attron(A_REVERSE);
 	mvprintw(row, COL2_D, "%-" STR(FLEN) "u", dat.m_targetIdleSpeed);
 	attroff(A_REVERSE);
