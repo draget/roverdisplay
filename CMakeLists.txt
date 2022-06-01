@@ -13,7 +13,8 @@ ${CMAKE_SOURCE_DIR}/../libcomm14cux/, ${CMAKE_SOURCE_DIR}/../libcomm14cux/build 
 
 include_directories(${CMAKE_SOURCE_DIR}/../libcomm14cux/src)
 
-set(CMAKE_BUILD_RPATH ".")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -29,4 +30,4 @@ target_link_libraries(roverdisplay ${CURSES_PANEL_LIBRARY})
 target_link_libraries(roverdisplay cuxinterface)
 
 
-add_custom_command(TARGET roverdisplay POST_BUILD COMMAND cp -L ${LIBCOMM14CUX_LIBRARY} ${CMAKE_BINARY_DIR}/bin)
+add_custom_command(TARGET roverdisplay POST_BUILD COMMAND cp ${LIBCOMM14CUX_LIBRARY}* ${CMAKE_BINARY_DIR}/bin)
