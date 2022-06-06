@@ -257,6 +257,31 @@ void codes_window() {
 
 }
 
+
+void info_window() {
+	wclear(popupw);
+	box(popupw, 0, 0);
+	wattron(popupw, A_REVERSE);
+	mvwprintw(popupw, ROWS - 2, 0, "Esc");
+	wattroff(popupw, A_REVERSE);
+
+	if(dat.m_readTuneId) {
+		mvwprintw(popupw, 1, 1, "* Tune: R%u", dat.m_tune);
+		mvwprintw(popupw, 2, 1, "* Ident: %x", dat.m_ident);
+		mvwprintw(popupw, 3, 1, "* Checksum fixer: %x", dat.m_checksumFixer);
+	}
+	else {
+		mvwprintw(popupw, 1, 1, "* Tune info not read from ECU");
+	}
+
+	show_panel(popupp);
+	update_panels();	
+	doupdate();
+	
+	return;
+
+}
+
 void alarm_handler(int signum) {
 	alarm_flag = 1;
 	return;
@@ -397,6 +422,10 @@ void process_key() {
 			case 'C':
 			case 'c':
 				codes_window();
+				break;
+			case 'I':
+			case 'i':
+				info_window();
 				break;
 			case 27:
 				hide_panel(popupp);

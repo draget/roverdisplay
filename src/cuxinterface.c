@@ -175,6 +175,10 @@ bool is_sample_appropriate_for_mode(SampleType type) {
 read_result read_data(ecu_data* dat) {
 	read_result result = readresult_nostatement;
 
+	if(! dat->m_readTuneId) {
+		if(c14cux_getTuneRevision(&cuxinfo, &(dat->m_tune), &(dat->m_checksumFixer), &(dat->m_ident))) dat->m_readTuneId = true;
+	}
+
 	if (is_due_for_measurement(SampleType_MAF))
 	{
 		result = merge_result(result, c14cux_getMAFReading(&cuxinfo, m_airflowType, &(dat->m_mafReading)));

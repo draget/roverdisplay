@@ -21,6 +21,7 @@ enum c14cux_airflow_type m_airflowType;
 enum c14cux_throttle_pos_type m_throttlePosType;
 
 typedef struct ecu_data {
+	bool m_readTuneId;
 	bool m_rpmLimitRead;
 	uint8_t m_roadSpeedMPH;
 	uint16_t m_engineSpeedRPM;
